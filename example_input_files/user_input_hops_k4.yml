@@ -1,6 +1,5 @@
 INPUT_PREFIX: hops
 OUTPUT_DIR: output
-COAL_MINER_PROJECT_PATH: /home/raya/Documents/Projects/CoalMiner
 NUM_RANDOM_MODELS: 10
 SFS_TYPE: DAF
 NUM_POPS: 4

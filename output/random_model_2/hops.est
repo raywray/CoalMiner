@@ -10,31 +10,24 @@
 1 N_POP2$ unif 10 2e6 output
 1 N_POP3$ unif 10 2e6 output
 1 N_POPG$ unif 10 2e6 output
-1 T_ADMIX03$ unif 1 5000 output
+1 T_DIVG3$ unif 1 5000 output
 1 T_1_2$ unif 0 1000 output
 1 T_2_3$ unif 0 1000 output
 1 T_3_4$ unif 0 1000 output
 1 T_4_5$ unif 0 1000 output
-1 T_5_6$ unif 0 1000 output
-1 T_6_7$ unif 0 1000 output
 1 N_ANCALL$ unif 10 2e6 output
-1 N_ANCG1$ unif 10 2e6 output
+1 N_ANCG3$ unif 10 2e6 output
+1 N_ANC01$ unif 10 2e6 output
 1 N_ANC31$ unif 10 2e6 output
-1 N_BOTGG$ unif 10 2e6 output
-1 N_CURGG$ unif 10 2e6 output
-1 N_ANCGG$ unif 10 2e6 output
 
 [RULES]
 
 [COMPLEX PARAMETERS]
 
-0 RELANCG1$ = N_ANCALL$/N_ANCG1$ hide
+0 RELANCG3$ = N_ANCALL$/N_ANCG3$ hide
+0 RELANC01$ = N_ANC01$/N_POP1$ hide
 0 RELANC31$ = N_ANC31$/N_POP1$ hide
-0 RESBOTGG$ = N_BOTGG$/N_CURGG$ hide
-0 RESBOTENDGG$ = N_ANCGG$/N_BOTGG$ hide
-1 T_BOTGG$ = T_1_2$ + T_ADMIX03$ output
-1 T_BOTENDGG$ = T_2_3$ + T_BOTGG$ output
-1 T_DIV01$ = T_3_4$ + T_BOTENDGG$ output
-1 T_DIV21$ = T_4_5$ + T_DIV01$ output
-1 T_DIVG1$ = T_5_6$ + T_DIV21$ output
-1 T_DIV31$ = T_6_7$ + T_DIVG1$ output
+1 T_ADMIX31$ = T_1_2$ + T_DIVG3$ output
+1 T_DIV21$ = T_2_3$ + T_ADMIX31$ output
+1 T_DIV01$ = T_3_4$ + T_DIV21$ output
+1 T_DIV31$ = T_4_5$ + T_DIV01$ output

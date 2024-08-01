@@ -16,21 +16,20 @@ def create_directory(dir_path):
     os.makedirs(dir_path, exist_ok=True)
 
 
-def random_model_setup(cur_run, output_dir, project_path):    
+def random_model_setup(cur_run, output_dir):    
     # make directory
     output_folder_name = os.path.join(output_dir, f"random_model_{cur_run}")
     create_directory(output_folder_name)
 
-    # copy SFS into new dir
-    sfs_base_path = os.path.join(project_path, user_params['INPUT_PREFIX'])
-    os.system(f"cp {sfs_base_path}* {output_folder_name}")
+    # copy SFS into new dir (assuming the sfs is right in the CoalMiner directory)
+    os.system(f"cp {user_params['INPUT_PREFIX']}* {output_folder_name}")
 
     # move into new dir
     os.chdir(output_folder_name)
 
-def generate_random_model(cur_model, output_dir, project_path):
+def generate_random_model(cur_model, output_dir):
     # set up the random model output directory
-    random_model_setup(cur_model, output_dir, project_path)
+    random_model_setup(cur_model, output_dir)
 
     # create filenames
     tpl_filename = f"{user_params['INPUT_PREFIX']}.tpl"
@@ -48,7 +47,6 @@ def generate_random_model(cur_model, output_dir, project_path):
 
 def generate_models(user_params):
     output_dir = user_params.get("OUTPUT_DIR", "output") # since output dir is an optional value
-    project_path = user_params["COAL_MINER_PROJECT_PATH"]
     num_random_models = user_params["NUM_RANDOM_MODELS"]
 
     # Create output directory
@@ -56,7 +54,7 @@ def generate_models(user_params):
     
     for i in range(1, num_random_models + 1):
         # generate random model
-        generate_random_model(cur_model=i, output_dir=output_dir, project_path=project_path)
+        generate_random_model(cur_model=i, output_dir=output_dir)
         
 
 if __name__ == "__main__":

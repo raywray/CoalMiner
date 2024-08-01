@@ -9,27 +9,32 @@
 1 N_POP1$ unif 10 2e6 output
 1 N_POP2$ unif 10 2e6 output
 1 N_POP3$ unif 10 2e6 output
-1 T_DIV13$ unif 1 5000 output
+0 MIG31$ logunif 1e-5 5 output
+0 MIG12$ logunif 1e-5 5 output
+0 MIG30$ logunif 1e-5 5 output
+0 MIG10$ logunif 1e-5 5 output
+0 MIG21$ logunif 1e-5 5 output
+0 MIG20$ logunif 1e-5 5 output
+0 MIG32$ logunif 1e-5 5 output
+0 MIG01$ logunif 1e-5 5 output
+0 MIG03$ logunif 1e-5 5 output
+0 MIG13$ logunif 1e-5 5 output
+0 MIG02$ logunif 1e-5 5 output
+0 MIG23$ logunif 1e-5 5 output
+1 T_ADMIX12$ unif 1 5000 output
 1 T_1_2$ unif 0 1000 output
 1 T_2_3$ unif 0 1000 output
 1 T_3_4$ unif 0 1000 output
-1 T_4_5$ unif 0 1000 output
 1 N_ANCALL$ unif 10 2e6 output
-1 N_ANC03$ unif 10 2e6 output
-1 N_ANC23$ unif 10 2e6 output
-1 N_BOT33$ unif 10 2e6 output
-1 N_CUR33$ unif 10 2e6 output
-1 N_ANC33$ unif 10 2e6 output
+1 N_ANC32$ unif 10 2e6 output
+1 N_ANC20$ unif 10 2e6 output
 
 [RULES]
 
 [COMPLEX PARAMETERS]
 
-0 RELANC03$ = N_ANCALL$/N_ANC03$ hide
-0 RELANC23$ = N_ANC23$/N_POP3$ hide
-0 RESBOT33$ = N_BOT33$/N_CUR33$ hide
-0 RESBOTEND33$ = N_ANC33$/N_BOT33$ hide
-1 T_BOT33$ = T_1_2$ + T_DIV13$ output
-1 T_BOTEND33$ = T_2_3$ + T_BOT33$ output
-1 T_DIV03$ = T_3_4$ + T_BOTEND33$ output
-1 T_DIV23$ = T_4_5$ + T_DIV03$ output
+0 RELANC32$ = N_ANCALL$/N_ANC32$ hide
+0 RELANC20$ = N_ANC20$/N_POP0$ hide
+1 T_DIV32$ = T_1_2$ + T_ADMIX12$ output
+1 T_DIV10$ = T_2_3$ + T_DIV32$ output
+1 T_DIV20$ = T_3_4$ + T_DIV10$ output

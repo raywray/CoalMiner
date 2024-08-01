@@ -10,35 +10,36 @@
 1 N_POP2$ unif 10 2e6 output
 1 N_POP3$ unif 10 2e6 output
 1 N_POPG$ unif 10 2e6 output
-0 MIG01$ logunif 1e-5 5 output
-0 MIG12$ logunif 1e-5 5 output
-0 MIG2G$ logunif 1e-5 5 output
 0 MIG20$ logunif 1e-5 5 output
-0 MIG03$ logunif 1e-5 5 output
-0 MIG1G$ logunif 1e-5 5 output
-0 MIG31$ logunif 1e-5 5 output
-0 MIG0G$ logunif 1e-5 5 output
+0 MIG01$ logunif 1e-5 5 output
 0 MIG02$ logunif 1e-5 5 output
-0 MIGG1$ logunif 1e-5 5 output
-0 MIG10$ logunif 1e-5 5 output
-0 MIG21$ logunif 1e-5 5 output
+0 MIG31$ logunif 1e-5 5 output
+0 MIG12$ logunif 1e-5 5 output
 0 MIG30$ logunif 1e-5 5 output
-0 MIGG0$ logunif 1e-5 5 output
-0 MIG32$ logunif 1e-5 5 output
-0 MIG3G$ logunif 1e-5 5 output
+0 MIGG1$ logunif 1e-5 5 output
 0 MIGG2$ logunif 1e-5 5 output
-0 MIGG3$ logunif 1e-5 5 output
-0 MIG13$ logunif 1e-5 5 output
+0 MIG21$ logunif 1e-5 5 output
+0 MIG32$ logunif 1e-5 5 output
+0 MIG1G$ logunif 1e-5 5 output
+0 MIG03$ logunif 1e-5 5 output
+0 MIG3G$ logunif 1e-5 5 output
 0 MIG23$ logunif 1e-5 5 output
-1 T_DIV01$ unif 1 5000 output
+0 MIGG3$ logunif 1e-5 5 output
+0 MIG2G$ logunif 1e-5 5 output
+0 MIGG0$ logunif 1e-5 5 output
+0 MIG10$ logunif 1e-5 5 output
+0 MIG0G$ logunif 1e-5 5 output
+0 MIG13$ logunif 1e-5 5 output
+1 T_ADMIX12$ unif 1 5000 output
 1 T_1_2$ unif 0 1000 output
 1 T_2_3$ unif 0 1000 output
 1 T_3_4$ unif 0 1000 output
 1 T_4_5$ unif 0 1000 output
 1 T_5_6$ unif 0 1000 output
+1 T_6_7$ unif 0 1000 output
 1 N_ANCALL$ unif 10 2e6 output
-1 N_ANC01$ unif 10 2e6 output
-1 N_ANC3G$ unif 10 2e6 output
+1 N_ANC1G$ unif 10 2e6 output
+1 N_ANC02$ unif 10 2e6 output
 1 N_BOTGG$ unif 10 2e6 output
 1 N_CURGG$ unif 10 2e6 output
 1 N_ANCGG$ unif 10 2e6 output
@@ -47,12 +48,13 @@
 
 [COMPLEX PARAMETERS]
 
-0 RELANC01$ = N_ANCALL$/N_ANC01$ hide
-0 RELANC3G$ = N_ANC3G$/N_POPG$ hide
+0 RELANC1G$ = N_ANCALL$/N_ANC1G$ hide
+0 RELANC02$ = N_ANC02$/N_POP2$ hide
 0 RESBOTGG$ = N_BOTGG$/N_CURGG$ hide
 0 RESBOTENDGG$ = N_ANCGG$/N_BOTGG$ hide
-1 T_DIV3G$ = T_1_2$ + T_DIV01$ output
-1 T_DIV2G$ = T_2_3$ + T_DIV3G$ output
-1 T_BOTGG$ = T_3_4$ + T_DIV2G$ output
-1 T_BOTENDGG$ = T_4_5$ + T_BOTGG$ output
-1 T_DIV1G$ = T_5_6$ + T_BOTENDGG$ output
+1 T_BOTGG$ = T_1_2$ + T_ADMIX12$ output
+1 T_BOTENDGG$ = T_2_3$ + T_BOTGG$ output
+1 T_DIV1G$ = T_3_4$ + T_BOTENDGG$ output
+1 T_DIV02$ = T_4_5$ + T_DIV1G$ output
+1 T_DIV3G$ = T_5_6$ + T_DIV02$ output
+1 T_DIVG2$ = T_6_7$ + T_DIV3G$ output

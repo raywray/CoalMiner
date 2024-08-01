@@ -18,10 +18,11 @@ N_POP3$
 //Number of migration matrices : 0 implies no migration between demes
 0
 //historical event: time, source, sink, migrants, new deme size, growth rate, migr mat index
-3 historical event
-T_DIV23$ 2 3 1 RELANC23$ 0 0
+4 historical event
+T_DIV20$ 2 0 1 RELANC20$ 0 0
+T_ADMIX10$ 1 0 0.7171041619999213 1 0 0
 T_DIV10$ 1 0 1 1 0 0
-T_DIV03$ 0 3 1 1 0 0
+T_DIV03$ 0 3 1 RELANC03$ 0 0
 //Number of independent loci [chromosome]
 1 0
 //Per chromosome: Number of contiguous linkage Block: a block is a set of contiguous loci

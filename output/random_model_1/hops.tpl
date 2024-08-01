@@ -23,26 +23,28 @@ MIG10$ 0.000 MIG12$ MIG13$
 MIG20$ MIG21$ 0.000 MIG23$
 MIG30$ MIG31$ MIG32$ 0.000
 //Migration matrix 1
+0.000 0.000 MIG02$ MIG03$
 0.000 0.000 0.000 0.000
-0.000 0.000 MIG12$ MIG13$
-0.000 MIG21$ 0.000 MIG23$
-0.000 MIG31$ MIG32$ 0.000
+MIG20$ 0.000 0.000 MIG23$
+MIG30$ 0.000 MIG32$ 0.000
 //Migration matrix 2
+0.000 0.000 0.000 MIG03$
 0.000 0.000 0.000 0.000
-0.000 0.000 MIG12$ 0.000
-0.000 MIG21$ 0.000 0.000
 0.000 0.000 0.000 0.000
+MIG30$ 0.000 0.000 0.000
 //Migration matrix 3
 0.000 0.000 0.000 0.000
 0.000 0.000 0.000 0.000
 0.000 0.000 0.000 0.000
 0.000 0.000 0.000 0.000
 //historical event: time, source, sink, migrants, new deme size, growth rate, migr mat index
-4 historical event
-T_ADMIX20$ 2 0 0.9222428449132173 1 0 1
-T_DIV02$ 0 2 1 1 0 1
-T_DIV31$ 3 1 1 RELANC31$ 0 2
-T_DIV21$ 2 1 1 RELANC21$ 0 3
+6 historical event
+T_BOT11$ 1 1 0 RESBOT11$ 0 0
+T_BOTEND11$ 1 1 0 RESBOTEND11$ 0 0
+T_DIV13$ 1 3 1 RELANC13$ 0 1
+T_ADMIX20$ 2 0 0.7230780345010343 1 0 2
+T_DIV20$ 2 0 1 1 0 2
+T_DIV03$ 0 3 1 RELANC03$ 0 3
 //Number of independent loci [chromosome]
 1 0
 //Per chromosome: Number of contiguous linkage Block: a block is a set of contiguous loci
