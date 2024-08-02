@@ -1,4 +1,4 @@
-name: fsc_wrapper_env
+name: coal_miner_env
 
 channels:
   - defaults
