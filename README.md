@@ -9,3 +9,4 @@ the user needs to have created an sfs already. Code written in my summary stats 
 
 how to install all packages: 
 `conda env create -f environment.yml`
+`conda activate coal_miner_env`

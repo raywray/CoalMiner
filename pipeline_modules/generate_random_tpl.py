@@ -1,3 +1,7 @@
+"""
+These functions take in some user provided parameters and randomly determine an evolutionary history to output to a .tpl file
+"""
+
 import random
 import re
 
@@ -64,29 +68,30 @@ def get_population_effective_sizes(number_of_populations, ghost_present):
     ]
 
 
-# TODO: delete?
-def get_random_growth_rate():
-    # according to my research, this is often 0.
-    # Generate a random number between 0 and 1
-    rand = random.random()
-    if rand < 0.9:
-        return 0  # Return 0 with a probability of 90%
-    else:
-        return random.uniform(
-            -1, 1
-        )  # Return a random value between -1 and 1 with a probability of 10%
-
-
-# TODO: will need to look at this again when putting more complex events back in
 def get_admix_sources_and_sinks(ghost_present, number_of_populations):
+    # define nested functions
+    def add_source_or_sink(possible_sources_or_sinks):
+        sources_or_sinks = []
+        # iterate through all populations
+        for _ in range(random.randint(1, number_of_populations)):
+            if possible_sources_or_sinks == []:
+                break # no more possibilities
+            new_source_or_sink = random.choice(possible_sources_or_sinks) # pick a source/sink from possibilites
+            sources_or_sinks.append(str(new_source_or_sink)) # add to respective list
+            possible_sources_or_sinks.remove(new_source_or_sink) # remove from possibilites
+        return sources_or_sinks
+    
+    # initialize empty lists
     sources, sinks = [], []
     
-    while sources == sinks:
-        possible_sources = list(range(number_of_populations))
-        possible_sinks = list(range(number_of_populations))
+    # randomly assign populations to sources or sinks (not all populations need be included)
+    while sources == sinks: # keep iterating until sources and sinks are not identical
+        # add all populations as a possibility
+        possible_sources = list(range(number_of_populations)) 
+        possible_sinks = list(range(number_of_populations)) 
 
         if ghost_present:
-            possible_sources.pop(-1)
+            possible_sources.pop(-1) # delete the last possible pop (so that we can assign it as "G" later)
             possible_sinks.pop(-1)
 
             # determine if ghost is source or sink
@@ -94,23 +99,10 @@ def get_admix_sources_and_sinks(ghost_present, number_of_populations):
                 possible_sources.append("G")
             else:
                 possible_sinks.append("G")
-
-        sources = []
-        sinks = []
-
-        for _ in range(random.randint(1, number_of_populations)):
-            if possible_sources == []:
-                break
-            new_source = random.choice(possible_sources)
-            sources.append(str(new_source))
-            possible_sources.remove(new_source)
-
-        for _ in range(random.randint(1, number_of_populations)):
-            if possible_sinks == []:
-                break
-            new_sink = random.choice(possible_sinks)
-            sinks.append(str(new_sink))
-            possible_sinks.remove(new_sink)
+        
+        # randomly choose sources & sinks
+        sources.extend(add_source_or_sink(possible_sources))
+        sinks.extend(add_source_or_sink(possible_sinks))
 
     return sources, sinks
 
@@ -146,7 +138,7 @@ def get_divergence_events(ghost_present, number_of_populations, pops_should_migr
     # assign all other pops as sources (can be 0)
     sources = [node for node in nodes if node not in sinks]
 
-    # finish adding ghost as a source or sink if ghost exists
+    # finish randomly assigning ghost as a source or sink if ghost exists
     if ghost_present:
         if random.choice([True, False]):
             sources.append("G")
@@ -190,15 +182,15 @@ def get_divergence_events(ghost_present, number_of_populations, pops_should_migr
 
 
 def get_admixture_events(ghost_present, num_pops):
-    # TODO: determine how many admixture events to add
-    # TODO: consider resizing demes during admixture
+    # get potential sources and sinks for the admixture event
     sources, sinks = get_admix_sources_and_sinks(
         ghost_present, num_pops
-    )  # TODO: look at this again        
+    )       
 
+    # randomly select admixture/migration percentage
     migrants = random.uniform(0, 1)
     
-    # make sure that there is no admixture with itself
+    # select two unique populations
     unique_source_and_sink = False
     while not unique_source_and_sink:
         source = random.choice(sources)
@@ -206,24 +198,25 @@ def get_admixture_events(ghost_present, num_pops):
         
         if source != sink: unique_source_and_sink = True
 
+    # initialize empty admixture event list
     admixture_events = []
+    # create current event
     current_event = [
         f"T_ADMIX{source}{sink}$",
         str(num_pops) if source == "G" else source,
         str(num_pops) if sink == "G" else sink,
         str(migrants),
-        "1",  # new deme size, 1 implies that the size of the sink deme remains unchanged
+        "1",  # new deme size, "1" implies that the size of the sink deme remains unchanged
         "0",  # growth rate
         "0",  # migration matrix
     ]
-    admixture_events.append(" ".join(current_event))
+    admixture_events.append(" ".join(current_event)) # add to all admixture events
 
     return admixture_events
 
 
 def get_bottleneck_events(num_pops, ghost_present):
-    # TODO: determine how many bottleneck events
-
+    # initialize empty list for bottleneck events
     bottleneck_events = []
 
     # find the pop to bottleneck
@@ -256,7 +249,9 @@ def order_historical_events(historical_events):
         return source, sink
 
     def place_events(current_ordered_events, events_to_add):
+        # make a copy
         newly_ordered_events = current_ordered_events.copy()
+        # iterate through new events
         for cur_event in events_to_add:
             # extract the current source and sink
             cur_source, cur_sink = extract_source_sink(cur_event)
@@ -284,26 +279,30 @@ def order_historical_events(historical_events):
         return newly_ordered_events
 
     def add_end_events(current_ordered_events, event_type):
+        # make a copy
         robust_ordered_events = current_ordered_events.copy()
         for event in current_ordered_events:
-            if event.startswith(f"T_{event_type}"):
+            # select the pertinenet event type
+            if event.startswith(f"T_{event_type}"): 
                 event_parts = event.split()
+                # create the "end" event
                 end_event = (
                     event_parts[0].replace(f"T_{event_type}", f"T_{event_type}END")
                     + " "
                     + " ".join(event_parts[1:])
                 )
+                # replace the event start deme resize with the event end deme resize
                 end_resize = event_parts[4].replace(
                     f"RES{event_type}", f"RES{event_type}END"
                 )
                 end_event = end_event.replace(event_parts[4], end_resize)
 
                 event_index = robust_ordered_events.index(event)
-                robust_ordered_events.insert(event_index + 1, end_event)
+                robust_ordered_events.insert(event_index + 1, end_event) # add to all events right after the starting event  
         return robust_ordered_events
 
     ordered_historical_events = []
-    # step 1: divide them into sections
+    # divide events into event types
     admix_events = []
     bot_events = []
 
@@ -317,16 +316,24 @@ def order_historical_events(historical_events):
             bot_events.append(event)
         # TODO: add other events here
 
-    # step 2: put in random (but chronologically correct order)
+    # put events in random -- but chronologically correct -- order
+    # start with admixture events
     ordered_historical_events = place_events(ordered_historical_events, admix_events)
+    # then, bottleneck events
     if bot_events:
         ordered_historical_events = place_events(ordered_historical_events, bot_events)
+        # here, make sure that the bottleneck endings are accurate
         ordered_historical_events = add_end_events(ordered_historical_events, "BOT")
 
     return ordered_historical_events
 
 
 def get_historical_events(ghost_present, number_of_populations, pops_should_migrate):
+    """
+    This function generates all historical events - divergence, admixture, and bottlenecks
+    """
+    
+    # initalize empty list
     historical_events = []
 
     # get divergence events
@@ -335,18 +342,14 @@ def get_historical_events(ghost_present, number_of_populations, pops_should_migr
         number_of_populations=number_of_populations,
         pops_should_migrate=pops_should_migrate,
     )
-    historical_events.extend(divergence_events)
+    historical_events.extend(divergence_events) # add divergence events to historical events
 
-    # randomize adding admixture
-    """
-    TODO: should there be migration if admixture? can admixture only happen if there is migration?
-    per ChatGPT, there doesn't have to be migration for there to be admixture
-    """
+    # randomize adding admixture (50% probability)
     if random.choice([True, False]):
         admixture_events = get_admixture_events(ghost_present=ghost_present, num_pops=number_of_populations)
-        historical_events.extend(admixture_events)
+        historical_events.extend(admixture_events) # add admixture events to historical events
 
-    # randomize adding bottlenecks
+    # randomize adding bottlenecks (50% probability)
     if random.choice([True, False]):
         bottleneck_events = get_bottleneck_events(number_of_populations, ghost_present)
         historical_events.extend(bottleneck_events)
@@ -474,9 +477,9 @@ def get_migration_matrices(num_pops, ghost_present, divergence_events):
 def generate_random_params(
     tpl_filename, user_given_number_of_populations, user_given_sample_sizes
 ):
-    # Step 1 ✓
     # determine if there is a ghost population
     add_ghost = random.choice([True, False])
+    
     # Determine total number of populations -- either given by user or + 1 if there is a ghost pop)
     number_of_populations = (
         user_given_number_of_populations + 1
@@ -484,25 +487,25 @@ def generate_random_params(
         else user_given_number_of_populations
     )
 
-    # Step 2 ✓
+    # determine sample sizes -- user-provided and add 0 if there is a ghost population
     sample_sizes = (
         user_given_sample_sizes + [0] if add_ghost else user_given_sample_sizes
     )
 
-    # Step 3 ✓
+    # set inital growth rates to 0
     initial_growth_rates = [0] * number_of_populations
 
-    # Step 4: get historical events
-    # determine if they're should be migration
-    pops_should_migrate = random.choice([True, False])
-
+    # determine if there should be migration (50% probability)
+    pops_should_migrate = random.choice([True, False]) 
+    
+    # generate historical events
     historical_events, divergence_events = get_historical_events(
         ghost_present=add_ghost,
         number_of_populations=number_of_populations,
         pops_should_migrate=pops_should_migrate,
     )
 
-    # Step 5: build migration matrices (if there is migration) ✓
+    # build migration matrices (if there is migration) 
     if pops_should_migrate:
         migration_matrices = get_migration_matrices(
             num_pops=number_of_populations,
@@ -512,11 +515,12 @@ def generate_random_params(
     else:
         migration_matrices = []
 
-    # Step 6 ✓
+    # assign population effective size variable names
     population_effective_sizes = get_population_effective_sizes(
         number_of_populations, add_ghost
     )
 
+    # write all generated parameters and variables to a tpl file
     write_tpl(
         filename=tpl_filename,
         number_of_populations=number_of_populations,
