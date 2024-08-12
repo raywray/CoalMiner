@@ -82,13 +82,14 @@ def get_migration_params(tpl, migration_dist):
 
 def generate_simple_complex_historical_params(historical_params, time_dist):
     # define nested functions
-    def add_event_to_param(time_parameters, event, min, max):
+    def add_event_to_param(time_parameters, event, min, max, hide=False):
         time_parameters.append(
-            "1 {} {} {} {} output".format(
+            "1 {} {} {} {} {}".format(
                 event,
                 time_dist["type"],
                 min,
                 max,
+                "hide" if hide else "output"
             )
         )
 
@@ -126,6 +127,7 @@ def generate_simple_complex_historical_params(historical_params, time_dist):
                 between_event_param,
                 space_between_events_min,
                 space_between_events_max,
+                hide=True
             )
 
             # add event to complex
@@ -185,7 +187,7 @@ def get_div_resize_params(tpl):
         first_resize_param = resize_params[0]
         source_sink = first_resize_param[len("RELANC") : first_resize_param.find("$")]
         complex_resize_params.append(
-            f"0 {first_resize_param} = N_ANCALL$/N_ANC{source_sink}$ hide"
+            f"0 {first_resize_param} = N_ANCALL$/N_ANC{source_sink}$ output"
         )
         resize_params.remove(first_resize_param)
         simple_params_to_add.append("N_ANCALL$")
@@ -195,7 +197,7 @@ def get_div_resize_params(tpl):
             source_sink = param[len("RELANC") : param.find("$")]
 
             complex_resize_params.append(
-                f"0 {param} = N_ANC{source_sink[0]}{source_sink[1]}$/N_POP{source_sink[1]}$ hide"
+                f"0 {param} = N_ANC{source_sink[0]}{source_sink[1]}$/N_POP{source_sink[1]}$ output"
             )
             simple_params_to_add.append(f"N_ANC{source_sink[0]}{source_sink[1]}$")
 
@@ -223,14 +225,14 @@ def get_bot_resize_params(tpl):
         for start_param in bot_start_resize_params:
             bot_pop = start_param[len("RESBOT") : -1]
             complex_resize_params.append(
-                f"0 {start_param} = N_BOT{bot_pop}$/N_CUR{bot_pop}$ hide"
+                f"0 {start_param} = N_BOT{bot_pop}$/N_CUR{bot_pop}$ output"
             )
             simple_params_to_add.append(f"N_BOT{bot_pop}$")
             simple_params_to_add.append(f"N_CUR{bot_pop}$")
         for end_param in bot_end_resize_params:
             bot_pop = end_param[len("RESBOTEND") : -1]
             complex_resize_params.append(
-                f"0 {end_param} = N_ANC{bot_pop}$/N_BOT{bot_pop}$ hide"
+                f"0 {end_param} = N_ANC{bot_pop}$/N_BOT{bot_pop}$ output"
             )
             simple_params_to_add.append(f"N_ANC{bot_pop}$")
 
@@ -289,7 +291,7 @@ def generate_random_params(
     if simple_params_to_add:
         for param in simple_params_to_add:
             simple_params.append(
-                "1 {} {} {} {} output".format(
+                "1 {} {} {} {} hide".format(
                     param,
                     effective_pop_size_dist["type"],
                     effective_pop_size_dist["min"],
