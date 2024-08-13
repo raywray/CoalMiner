@@ -35,7 +35,7 @@ def random_model_setup(cur_run, output_dir):
     # move into new dir
     os.chdir(output_folder_name)
 
-def generate_random_model(cur_model, output_dir):
+def make_random_model(cur_model, output_dir):
     # set up the random model output directory
     random_model_setup(cur_model, output_dir)
 
@@ -64,7 +64,7 @@ def generate_models(user_params):
     
     for i in range(1, num_random_models + 1):
         # generate random model
-        generate_random_model(cur_model=i, output_dir=output_dir)
+        make_random_model(cur_model=i, output_dir=output_dir)
         
 
 if __name__ == "__main__":

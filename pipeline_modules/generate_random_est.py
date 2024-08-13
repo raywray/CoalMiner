@@ -80,7 +80,7 @@ def get_migration_params(tpl, migration_dist):
     return migration_params
 
 
-def generate_simple_complex_historical_params(historical_params, time_dist):
+def generate_simple_complex_historical_params(historical_params, time_dist, max_time_between_events):
     # define nested functions
     def add_event_to_param(time_parameters, event, min, max, hide=False):
         time_parameters.append(
@@ -105,9 +105,7 @@ def generate_simple_complex_historical_params(historical_params, time_dist):
     simple_params = []
     complex_params = []
     space_between_events_min = 0
-    space_between_events_max = (
-        1000  # TODO: OG stephanie code was 500. HARDCODED, can change
-    )
+    space_between_events_max = max_time_between_events
 
     # decide whether simple or complex param
     if len(historical_params) == 1:
@@ -137,14 +135,14 @@ def generate_simple_complex_historical_params(historical_params, time_dist):
     return simple_params, complex_params
 
 
-def get_historical_event_params(tpl, time_dist, param_type):
+def get_historical_event_params(tpl, time_dist, param_type, max_time_between_events):
 
     historical_event_params = []
     for element in get_params_from_tpl(tpl, "T_"):
         historical_event_params.extend(re.findall(r"\bT_\w*\$*", element))
 
     simple_historical_params, complex_historical_params = (
-        generate_simple_complex_historical_params(historical_event_params, time_dist)
+        generate_simple_complex_historical_params(historical_event_params, time_dist, max_time_between_events)
     )
 
     if param_type == "simple":
@@ -154,7 +152,7 @@ def get_historical_event_params(tpl, time_dist, param_type):
 
 
 def get_simple_params(
-    tpl, mutation_rate_dist, effective_pop_size_dist, migration_dist, time_dist
+    tpl, mutation_rate_dist, effective_pop_size_dist, migration_dist, time_dist, max_time_between_events
 ):
     simple_params = []
     # get mutation rate params
@@ -167,7 +165,7 @@ def get_simple_params(
     simple_params.extend(get_migration_params(tpl, migration_dist))
 
     # get historical event params
-    simple_params.extend(get_historical_event_params(tpl, time_dist, "simple"))
+    simple_params.extend(get_historical_event_params(tpl, time_dist, "simple", max_time_between_events))
     return simple_params
 
 
@@ -239,7 +237,7 @@ def get_bot_resize_params(tpl):
     return complex_resize_params, simple_params_to_add
 
 
-def get_complex_params(tpl, time_dist):
+def get_complex_params(tpl, time_dist, max_time_between_events):
     complex_params = []
 
     # get resize params
@@ -256,7 +254,7 @@ def get_complex_params(tpl, time_dist):
         complex_params.extend(complex_bot_resize_params)
 
     # get complex time params
-    complex_params.extend(get_historical_event_params(tpl, time_dist, "complex"))
+    complex_params.extend(get_historical_event_params(tpl, time_dist, "complex", max_time_between_events))
 
     return complex_params, simple_params_to_add
 
@@ -268,6 +266,7 @@ def generate_random_params(
     effective_pop_size_dist,
     migration_dist,
     time_dist,
+    max_time_between_events=1000
 ):
     # convert tpl file to list
     tpl = []
@@ -282,11 +281,12 @@ def generate_random_params(
         effective_pop_size_dist=effective_pop_size_dist,
         migration_dist=migration_dist,
         time_dist=time_dist,
+        max_time_between_events=max_time_between_events
     )
 
     # get complex params
     complex_params, simple_params_to_add = get_complex_params(
-        tpl=tpl, time_dist=time_dist
+        tpl=tpl, time_dist=time_dist, max_time_between_events=max_time_between_events
     )
     if simple_params_to_add:
         for param in simple_params_to_add:
