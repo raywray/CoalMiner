@@ -80,15 +80,16 @@ def get_migration_params(tpl, migration_dist):
     return migration_params
 
 
-def generate_simple_complex_historical_params(historical_params, time_dist):
+def generate_simple_complex_historical_params(historical_params, time_dist, max_time_between_events):
     # define nested functions
-    def add_event_to_param(time_parameters, event, min, max):
+    def add_event_to_param(time_parameters, event, min, max, hide=False):
         time_parameters.append(
-            "1 {} {} {} {} output".format(
+            "1 {} {} {} {} {}".format(
                 event,
                 time_dist["type"],
                 min,
                 max,
+                "hide" if hide else "output"
             )
         )
 
@@ -104,9 +105,7 @@ def generate_simple_complex_historical_params(historical_params, time_dist):
     simple_params = []
     complex_params = []
     space_between_events_min = 0
-    space_between_events_max = (
-        1000  # TODO: OG stephanie code was 500. HARDCODED, can change
-    )
+    space_between_events_max = max_time_between_events
 
     # decide whether simple or complex param
     if len(historical_params) == 1:
@@ -126,6 +125,7 @@ def generate_simple_complex_historical_params(historical_params, time_dist):
                 between_event_param,
                 space_between_events_min,
                 space_between_events_max,
+                hide=True
             )
 
             # add event to complex
@@ -135,14 +135,14 @@ def generate_simple_complex_historical_params(historical_params, time_dist):
     return simple_params, complex_params
 
 
-def get_historical_event_params(tpl, time_dist, param_type):
+def get_historical_event_params(tpl, time_dist, param_type, max_time_between_events):
 
     historical_event_params = []
     for element in get_params_from_tpl(tpl, "T_"):
         historical_event_params.extend(re.findall(r"\bT_\w*\$*", element))
 
     simple_historical_params, complex_historical_params = (
-        generate_simple_complex_historical_params(historical_event_params, time_dist)
+        generate_simple_complex_historical_params(historical_event_params, time_dist, max_time_between_events)
     )
 
     if param_type == "simple":
@@ -152,7 +152,7 @@ def get_historical_event_params(tpl, time_dist, param_type):
 
 
 def get_simple_params(
-    tpl, mutation_rate_dist, effective_pop_size_dist, migration_dist, time_dist
+    tpl, mutation_rate_dist, effective_pop_size_dist, migration_dist, time_dist, max_time_between_events
 ):
     simple_params = []
     # get mutation rate params
@@ -165,7 +165,7 @@ def get_simple_params(
     simple_params.extend(get_migration_params(tpl, migration_dist))
 
     # get historical event params
-    simple_params.extend(get_historical_event_params(tpl, time_dist, "simple"))
+    simple_params.extend(get_historical_event_params(tpl, time_dist, "simple", max_time_between_events))
     return simple_params
 
 
@@ -185,7 +185,7 @@ def get_div_resize_params(tpl):
         first_resize_param = resize_params[0]
         source_sink = first_resize_param[len("RELANC") : first_resize_param.find("$")]
         complex_resize_params.append(
-            f"0 {first_resize_param} = N_ANCALL$/N_ANC{source_sink}$ hide"
+            f"0 {first_resize_param} = N_ANCALL$/N_ANC{source_sink}$ output"
         )
         resize_params.remove(first_resize_param)
         simple_params_to_add.append("N_ANCALL$")
@@ -195,7 +195,7 @@ def get_div_resize_params(tpl):
             source_sink = param[len("RELANC") : param.find("$")]
 
             complex_resize_params.append(
-                f"0 {param} = N_ANC{source_sink[0]}{source_sink[1]}$/N_POP{source_sink[1]}$ hide"
+                f"0 {param} = N_ANC{source_sink[0]}{source_sink[1]}$/N_POP{source_sink[1]}$ output"
             )
             simple_params_to_add.append(f"N_ANC{source_sink[0]}{source_sink[1]}$")
 
@@ -223,21 +223,21 @@ def get_bot_resize_params(tpl):
         for start_param in bot_start_resize_params:
             bot_pop = start_param[len("RESBOT") : -1]
             complex_resize_params.append(
-                f"0 {start_param} = N_BOT{bot_pop}$/N_CUR{bot_pop}$ hide"
+                f"0 {start_param} = N_BOT{bot_pop}$/N_CUR{bot_pop}$ output"
             )
             simple_params_to_add.append(f"N_BOT{bot_pop}$")
             simple_params_to_add.append(f"N_CUR{bot_pop}$")
         for end_param in bot_end_resize_params:
             bot_pop = end_param[len("RESBOTEND") : -1]
             complex_resize_params.append(
-                f"0 {end_param} = N_ANC{bot_pop}$/N_BOT{bot_pop}$ hide"
+                f"0 {end_param} = N_ANC{bot_pop}$/N_BOT{bot_pop}$ output"
             )
             simple_params_to_add.append(f"N_ANC{bot_pop}$")
 
     return complex_resize_params, simple_params_to_add
 
 
-def get_complex_params(tpl, time_dist):
+def get_complex_params(tpl, time_dist, max_time_between_events):
     complex_params = []
 
     # get resize params
@@ -254,7 +254,7 @@ def get_complex_params(tpl, time_dist):
         complex_params.extend(complex_bot_resize_params)
 
     # get complex time params
-    complex_params.extend(get_historical_event_params(tpl, time_dist, "complex"))
+    complex_params.extend(get_historical_event_params(tpl, time_dist, "complex", max_time_between_events))
 
     return complex_params, simple_params_to_add
 
@@ -266,6 +266,7 @@ def generate_random_params(
     effective_pop_size_dist,
     migration_dist,
     time_dist,
+    max_time_between_events=1000
 ):
     # convert tpl file to list
     tpl = []
@@ -280,16 +281,17 @@ def generate_random_params(
         effective_pop_size_dist=effective_pop_size_dist,
         migration_dist=migration_dist,
         time_dist=time_dist,
+        max_time_between_events=max_time_between_events
     )
 
     # get complex params
     complex_params, simple_params_to_add = get_complex_params(
-        tpl=tpl, time_dist=time_dist
+        tpl=tpl, time_dist=time_dist, max_time_between_events=max_time_between_events
     )
     if simple_params_to_add:
         for param in simple_params_to_add:
             simple_params.append(
-                "1 {} {} {} {} output".format(
+                "1 {} {} {} {} hide".format(
                     param,
                     effective_pop_size_dist["type"],
                     effective_pop_size_dist["min"],
