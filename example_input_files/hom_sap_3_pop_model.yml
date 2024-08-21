@@ -1,5 +1,5 @@
 INPUT_PREFIX: hom_sap
-OUTPUT_DIR: coalminer_models
+OUTPUT_DIR: hom_sap_models
 NUM_RANDOM_MODELS: 100
 NUM_POPS: 3
 SAMPLE_SIZES:
