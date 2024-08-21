@@ -44,7 +44,7 @@ For example: `python3 /Users/foo/Projects/CoalMiner/coalminer.py /Users/foo/Proj
 CoalMiner generates random `.est` and `.tpl` files and saves them in directories titled `{prefix}_random_model_1`, `{prefix}_random_model_2`, etc., in the output directory. It also copies the provided SFS files into the respective model directories. 
 
 ### Example
-Any example files can be found in the `example_input_files` directory. These files are used in the [video tutorial](LINK HERE). Run the following commands to see how the example files work (assuming you have navigated into the *CoalMiner* directory):
+Any example files can be found in the `example_input_files` directory. These files are used in the [**video tutorial**](https://youtu.be/XNAofUfulHw). Run the following commands to see how the example files work (assuming you have navigated into the *CoalMiner* directory):
 
 `cp example_input_files/hom_sap_joint*.obs .`
 
