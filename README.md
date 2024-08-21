@@ -3,7 +3,9 @@ This package is intended to help overcome limitation when estimating a model's e
 
 ## Installation
 1. Clone the *CoalMiner* repo onto your machine: `git clone https://github.com/raywray/CoalMiner.git`
+2. Move into the *CoalMiner* directory: `cd CoalMiner`
 2. Install all necessary conda packages and create a conda environment (will need to have [anaconda](https://docs.anaconda.com/anaconda/install/) or [miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) installed prior) with the following command: `conda env create -f environment.yml`
+
 3. Activate the conda environment: `conda activate coalminer_env`
 
 ## Use CoalMiner
