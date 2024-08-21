@@ -57,7 +57,7 @@ def make_random_model(cur_model, output_dir):
 def generate_models(user_params):
     # pull out user params
     output_dir = user_params.get("OUTPUT_DIR", "output") # since output dir is an optional value
-    num_random_models = user_params["NUM_RANDOM_MODELS"]
+    num_random_models = user_params.get("NUM_RANDOM_MODELS", 100) # since this is also optional
 
     # Create output directory
     create_directory(output_dir)
