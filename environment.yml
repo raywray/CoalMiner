@@ -1,4 +1,4 @@
-name: coal_miner_env
+name: coalminer_env
 
 channels:
   - defaults

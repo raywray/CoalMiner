@@ -30,7 +30,7 @@ def random_model_setup(cur_run, output_dir):
     create_directory(output_folder_name)
 
     # copy SFS into new dir (assuming the sfs's are right in the CoalMiner directory)
-    os.system(f"cp {user_params['INPUT_PREFIX']}* {output_folder_name}")
+    os.system(f"cp {user_params['INPUT_PREFIX']}*.obs {output_folder_name}")
 
     # move into new dir
     os.chdir(output_folder_name)
@@ -57,7 +57,7 @@ def make_random_model(cur_model, output_dir):
 def generate_models(user_params):
     # pull out user params
     output_dir = user_params.get("OUTPUT_DIR", "output") # since output dir is an optional value
-    num_random_models = user_params["NUM_RANDOM_MODELS"]
+    num_random_models = user_params.get("NUM_RANDOM_MODELS", 100) # since this is also optional
 
     # Create output directory
     create_directory(output_dir)
