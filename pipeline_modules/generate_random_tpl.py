@@ -220,16 +220,16 @@ def get_bottleneck_events(num_pops, ghost_present):
     bottleneck_events = []
 
     # find the pop to bottleneck
-    source = sink = random.choice(list(range(num_pops)))
+    source = sink = str(random.choice(list(range(num_pops))))
     if ghost_present:
-        if source or sink == str(num_pops - 1):
+        if source == str(num_pops-1):
             source = sink = "G"
 
     # define bottleneck start
     current_event = [
         f"T_BOT{source}{sink}$",
-        str(num_pops) if source == "G" else str(source),
-        str(num_pops) if sink == "G" else str(sink),
+        str(num_pops-1) if source == "G" else str(source),
+        str(num_pops-1) if sink == "G" else str(sink),
         "0",  # migrants
         f"RESBOT{source}{sink}$",  # new deme size
         "0",  # growth rate
