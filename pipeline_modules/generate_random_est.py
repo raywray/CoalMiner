@@ -104,7 +104,7 @@ def generate_simple_complex_historical_params(historical_params, time_dist, max_
     # create base values
     simple_params = []
     complex_params = []
-    space_between_events_min = 0
+    space_between_events_min = 1
     space_between_events_max = max_time_between_events
 
     # decide whether simple or complex param
