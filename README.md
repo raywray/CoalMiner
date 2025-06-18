@@ -1,4 +1,7 @@
 # CoalMiner
+
+<img src="./docs/img/logo.png" alt="coalminer logo" height="300"/>
+
 This package is intended to help overcome limitation when estimating a model's evolutionary history. It takes user provided files and parameters, and creates several random topologies for the user to then test using [fastsimcoal28](https://cmpg.unibe.ch/software/fastsimcoal28/).
 
 ## Installation
