@@ -26,7 +26,7 @@ conda activate coalminer_env
 *CoalMiner* requires only 2 types of input files: an SFS and a `.yml` with user parameters. 
 
 #### SFS
-Users can create their SFS's from `.vcf` files using several packages, including using the [PPP](https://ppp.readthedocs.io/en/latest/PPP_pages/Input_File_Generators/vcf_to_fastsimcoal.html) pipeline (this package is recommended)[^1]. These files **MUST** be placed directly in the *CoalMiner* directly and can be accomplished with the following command: 
+Users can create their SFS's from `.vcf` files using several packages, including using the [PPP](https://ppp.readthedocs.io/en/latest/PPP_pages/Input_File_Generators/vcf_to_fastsimcoal.html) or [easySFS](https://github.com/isaacovercast/easySFS) packages[^1]. These files **MUST** be placed directly in the *CoalMiner* directly and can be accomplished with the following command: 
 ```bash
 cp [prefix]_joint*.obs CoalMiner/
 # Where [prefix] is your chosen internal prefix for your files
@@ -62,14 +62,14 @@ python3 /Users/foo/Projects/CoalMiner/coalminer.py /Users/foo/Projects/coalminer
 ```
 
 ### Output Files
-CoalMiner generates random `.est` and `.tpl` files and saves them in directories titled `{prefix}_random_model_1`, `{prefix}_random_model_2`, etc., in the output directory. It also copies the provided SFS files into the respective model directories. 
+CoalMiner generates random `.est` and `.tpl` files and saves them in directories titled `{prefix}_random_model_1`, `{prefix}_random_model_2`, etc., in the output directory. It also copies the provided SFS files into the respective model directories. Example output files can be seen in the `tutorial/example_output_files` directory.  
 
 ### Example
-Any example files can be found in the `example_input_files` directory. These files are used in the [**video tutorial**](https://youtu.be/XNAofUfulHw). Run the following commands to see how the example files work (assuming you have navigated into the *CoalMiner* directory):
+Any example files can be found in the `tutorial/example_input_files` directory. These files are used in the [**video tutorial**](https://youtu.be/XNAofUfulHw). Run the following commands to see how the example files work (assuming you have navigated into the *CoalMiner* directory):
 
 ```bash
 # 1. Copy homo sapiens example parameter files into coal miner directory
-cp example_input_files/hom_sap_joint*.obs .
+cp tutorial/example_input_files/hom_sap_joint*.obs .
 # 2. Run coalminer
 python3 coalminer.py example_input_files/hom_sap_3_pop_model.yml
 ```
