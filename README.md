@@ -29,7 +29,9 @@ conda activate coalminer_env
 *CoalMiner* requires only 2 types of input files: an SFS and a `.yml` with user parameters. 
 
 #### SFS
-Users can create their SFS's from `.vcf` files using several packages, including using the [PPP](https://ppp.readthedocs.io/en/latest/PPP_pages/Input_File_Generators/vcf_to_fastsimcoal.html) or [easySFS](https://github.com/isaacovercast/easySFS) packages[^1]. These files **MUST** be placed directly in the *CoalMiner* directly and can be accomplished with the following command: 
+Users can create their SFS's from `.vcf` files using several packages, including using the [PPP](https://ppp.readthedocs.io/en/latest/PPP_pages/Input_File_Generators/vcf_to_fastsimcoal.html) or [easySFS](https://github.com/isaacovercast/easySFS) packages[^1]. 
+
+You can specify the paths to your `.obs` files directly in the user parameter `.yml` file (see below), or alternatively place them directly in the *CoalMiner* directory using:
 ```bash
 cp [prefix]_joint*.obs CoalMiner/
 # Where [prefix] is your chosen internal prefix for your files
@@ -49,8 +51,15 @@ Additionally, prior distributions, ranges and types must be provided for (under 
 - and an optional value for the maximum number of generations between events (default=1000): `max_time_between_events` 
 
 Optional Parameters:
-- `OUTPUT_DIR`: (optional) Path for outupt
+- `OUTPUT_DIR`: path for outupt
 - `NUM_RANDOM_MODELS`: the number of random topologies to generate (defaulted to 100)
+- `OBS_FILES`: list of paths to your `.obs` files. If not provided, *CoalMiner* will look for files matching `INPUT_PREFIX*.obs` in the current directory. Supports absolute paths, relative paths, and `~` for home directory. Example:
+```yaml
+OBS_FILES:
+  - /absolute/path/to/hom_sap_DSFS.obs
+  - relative/path/to/hom_sap_jointDAFpop1_0.obs
+  - ~/data/hom_sap_jointDAFpop2_0.obs
+```
 
 
 Example input `.yml` files can be found in the `example_input_files/` directory.
@@ -71,10 +80,16 @@ CoalMiner generates random `.est` and `.tpl` files and saves them in directories
 Any example files can be found in the `tutorial/example_input_files` directory. These files are used in the [**video tutorial**](https://youtu.be/XNAofUfulHw). Run the following commands to see how the example files work (assuming you have navigated into the *CoalMiner* directory):
 
 ```bash
+# Run coalminer (the example YAML already specifies the paths to the .obs files)
+python3 coalminer.py tutorial/example_input_files/hom_sap_3_pop_model.yml
+```
+
+**Note:** The example now uses the `OBS_FILES` parameter in the YAML to specify file paths. If you prefer the old method, you can copy the `.obs` files to the current directory and remove the `OBS_FILES` section from the YAML:
+```bash
 # 1. Copy homo sapiens example parameter files into coal miner directory
 cp tutorial/example_input_files/hom_sap_joint*.obs .
 # 2. Run coalminer
-python3 coalminer.py example_input_files/hom_sap_3_pop_model.yml
+python3 coalminer.py tutorial/example_input_files/hom_sap_3_pop_model.yml
 ```
 
 [^1]: *fastsimcoal* will only run with specific SFS suffix names. See the *OBSERVED SFS FILE NAMES* section of the [fastsimcoal manual](https://cmpg.unibe.ch/software/fastsimcoal28/man/fastsimcoal28.pdf).

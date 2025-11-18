@@ -29,8 +29,19 @@ def random_model_setup(cur_run, output_dir):
     output_folder_name = os.path.join(output_dir, f"random_model_{cur_run}")
     create_directory(output_folder_name)
 
-    # copy SFS into new dir (assuming the sfs's are right in the CoalMiner directory)
-    os.system(f"cp {user_params['INPUT_PREFIX']}*.obs {output_folder_name}")
+    # copy SFS into new dir
+    # Check if OBS_FILES is specified in the YAML, otherwise use the old wildcard method
+    if "OBS_FILES" in user_params and user_params["OBS_FILES"]:
+        # Copy each specified .obs file
+        for obs_file in user_params["OBS_FILES"]:
+            obs_file_path = os.path.expanduser(obs_file)  # Handle ~ in paths
+            if os.path.exists(obs_file_path):
+                os.system(f"cp {obs_file_path} {output_folder_name}")
+            else:
+                print(f"Warning: .obs file not found: {obs_file_path}")
+    else:
+        # Fallback to old behavior (assuming the .obs files are in the CoalMiner directory)
+        os.system(f"cp {user_params['INPUT_PREFIX']}*.obs {output_folder_name}")
 
     # move into new dir
     os.chdir(output_folder_name)
