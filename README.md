@@ -13,10 +13,10 @@ git clone https://github.com/raywray/CoalMiner.git
 ```bash
 cd CoalMiner
 ```
-2. Install all necessary conda packages and create a conda environment (will need to have [anaconda](https://docs.anaconda.com/anaconda/install/) or [miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) installed prior) with the following command:
+2. Install all necessary conda or mamba packages and create a conda environment (will need to have [anaconda](https://docs.anaconda.com/anaconda/install/) or [miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) installed prior) with the following command:
 
 ```bash
-conda env create -f environment.yml
+conda env create -f environment.yml -y
 ```
 
 3. Activate the conda environment:
@@ -38,7 +38,7 @@ cp [prefix]_joint*.obs CoalMiner/
 ```
 
 #### User parameter `.yml`
-This file must contain the follwing information
+This file must contain the following information
 - `INPUT_PREFIX`: the output prefix the user would like to use 
 - `NUM_POPS`: the number of populations being tested 
 - `SAMPLE_SIZES`: as a bulleted list, the number of sampled individuals from each population 
@@ -51,7 +51,7 @@ Additionally, prior distributions, ranges and types must be provided for (under 
 - and an optional value for the maximum number of generations between events (default=1000): `max_time_between_events` 
 
 Optional Parameters:
-- `OUTPUT_DIR`: path for outupt
+- `OUTPUT_DIR`: path for output
 - `NUM_RANDOM_MODELS`: the number of random topologies to generate (defaulted to 100)
 - `OBS_FILES`: list of paths to your `.obs` files. If not provided, *CoalMiner* will look for files matching `INPUT_PREFIX*.obs` in the current directory. Supports absolute paths, relative paths, and `~` for home directory. Example:
 ```yaml
