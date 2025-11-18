@@ -6,6 +6,12 @@ SAMPLE_SIZES:
   - 15
   - 15
   - 15
+# Optional: Specify paths to .obs files. If not provided, will look for files matching INPUT_PREFIX*.obs in the current directory
+OBS_FILES:
+  - tutorial/example_input_files/hom_sap_DSFS.obs
+  - tutorial/example_input_files/hom_sap_jointDAFpop1_0.obs
+  - tutorial/example_input_files/hom_sap_jointDAFpop2_0.obs
+  - tutorial/example_input_files/hom_sap_jointDAFpop2_1.obs
 MODEL_PARAMS:
   mutation_rate_dist:
     min: 1.29e-08
