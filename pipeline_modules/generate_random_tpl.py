@@ -41,7 +41,7 @@ def write_tpl(
         "1",
         "//per Block:data type, number of loci, per gen recomb and mut rates",
         f"FREQ 1 0 MUTRATE$ OUTEXP",
-        ""
+        "",
     ]
 
     # write to file
@@ -75,23 +75,29 @@ def get_admix_sources_and_sinks(ghost_present, number_of_populations):
         # iterate through all populations
         for _ in range(random.randint(1, number_of_populations)):
             if possible_sources_or_sinks == []:
-                break # no more possibilities
-            new_source_or_sink = random.choice(possible_sources_or_sinks) # pick a source/sink from possibilites
-            sources_or_sinks.append(str(new_source_or_sink)) # add to respective list
-            possible_sources_or_sinks.remove(new_source_or_sink) # remove from possibilites
+                break  # no more possibilities
+            new_source_or_sink = random.choice(
+                possible_sources_or_sinks
+            )  # pick a source/sink from possibilites
+            sources_or_sinks.append(str(new_source_or_sink))  # add to respective list
+            possible_sources_or_sinks.remove(
+                new_source_or_sink
+            )  # remove from possibilites
         return sources_or_sinks
-    
+
     # initialize empty lists
     sources, sinks = [], []
-    
+
     # randomly assign populations to sources or sinks (not all populations need be included)
-    while sources == sinks: # keep iterating until sources and sinks are not identical
+    while sources == sinks:  # keep iterating until sources and sinks are not identical
         # add all populations as a possibility
-        possible_sources = list(range(number_of_populations)) 
-        possible_sinks = list(range(number_of_populations)) 
+        possible_sources = list(range(number_of_populations))
+        possible_sinks = list(range(number_of_populations))
 
         if ghost_present:
-            possible_sources.pop(-1) # delete the last possible pop (so that we can assign it as "G" later)
+            possible_sources.pop(
+                -1
+            )  # delete the last possible pop (so that we can assign it as "G" later)
             possible_sinks.pop(-1)
 
             # determine if ghost is source or sink
@@ -99,7 +105,7 @@ def get_admix_sources_and_sinks(ghost_present, number_of_populations):
                 possible_sources.append("G")
             else:
                 possible_sinks.append("G")
-        
+
         # randomly choose sources & sinks
         sources.extend(add_source_or_sink(possible_sources))
         sinks.extend(add_source_or_sink(possible_sinks))
@@ -183,20 +189,19 @@ def get_divergence_events(ghost_present, number_of_populations, pops_should_migr
 
 def get_admixture_events(ghost_present, num_pops):
     # get potential sources and sinks for the admixture event
-    sources, sinks = get_admix_sources_and_sinks(
-        ghost_present, num_pops
-    )       
+    sources, sinks = get_admix_sources_and_sinks(ghost_present, num_pops)
 
     # randomly select admixture/migration percentage
     migrants = random.uniform(0, 1)
-    
+
     # select two unique populations
     unique_source_and_sink = False
     while not unique_source_and_sink:
         source = random.choice(sources)
         sink = random.choice(sinks)
-        
-        if source != sink: unique_source_and_sink = True
+
+        if source != sink:
+            unique_source_and_sink = True
 
     # initialize empty admixture event list
     admixture_events = []
@@ -210,7 +215,7 @@ def get_admixture_events(ghost_present, num_pops):
         "0",  # growth rate
         "0",  # migration matrix
     ]
-    admixture_events.append(" ".join(current_event)) # add to all admixture events
+    admixture_events.append(" ".join(current_event))  # add to all admixture events
 
     return admixture_events
 
@@ -222,14 +227,14 @@ def get_bottleneck_events(num_pops, ghost_present):
     # find the pop to bottleneck
     source = sink = str(random.choice(list(range(num_pops))))
     if ghost_present:
-        if source == str(num_pops-1):
+        if source == str(num_pops - 1):
             source = sink = "G"
 
     # define bottleneck start
     current_event = [
         f"T_BOT{source}{sink}$",
-        str(num_pops-1) if source == "G" else str(source),
-        str(num_pops-1) if sink == "G" else str(sink),
+        str(num_pops - 1) if source == "G" else str(source),
+        str(num_pops - 1) if sink == "G" else str(sink),
         "0",  # migrants
         f"RESBOT{source}{sink}$",  # new deme size
         "0",  # growth rate
@@ -283,7 +288,7 @@ def order_historical_events(historical_events):
         robust_ordered_events = current_ordered_events.copy()
         for event in current_ordered_events:
             # select the pertinenet event type
-            if event.startswith(f"T_{event_type}"): 
+            if event.startswith(f"T_{event_type}"):
                 event_parts = event.split()
                 # create the "end" event
                 end_event = (
@@ -298,7 +303,9 @@ def order_historical_events(historical_events):
                 end_event = end_event.replace(event_parts[4], end_resize)
 
                 event_index = robust_ordered_events.index(event)
-                robust_ordered_events.insert(event_index + 1, end_event) # add to all events right after the starting event  
+                robust_ordered_events.insert(
+                    event_index + 1, end_event
+                )  # add to all events right after the starting event
         return robust_ordered_events
 
     ordered_historical_events = []
@@ -332,7 +339,7 @@ def get_historical_events(ghost_present, number_of_populations, pops_should_migr
     """
     This function generates all historical events - divergence, admixture, and bottlenecks
     """
-    
+
     # initalize empty list
     historical_events = []
 
@@ -342,12 +349,18 @@ def get_historical_events(ghost_present, number_of_populations, pops_should_migr
         number_of_populations=number_of_populations,
         pops_should_migrate=pops_should_migrate,
     )
-    historical_events.extend(divergence_events) # add divergence events to historical events
+    historical_events.extend(
+        divergence_events
+    )  # add divergence events to historical events
 
     # randomize adding admixture (50% probability)
     if random.choice([True, False]):
-        admixture_events = get_admixture_events(ghost_present=ghost_present, num_pops=number_of_populations)
-        historical_events.extend(admixture_events) # add admixture events to historical events
+        admixture_events = get_admixture_events(
+            ghost_present=ghost_present, num_pops=number_of_populations
+        )
+        historical_events.extend(
+            admixture_events
+        )  # add admixture events to historical events
 
     # randomize adding bottlenecks (50% probability)
     if random.choice([True, False]):
@@ -397,9 +410,11 @@ def set_migration_matrix(events, event_index):
     return events
 
 
-def get_matrix_template(num_pops, ghost_present):
+def get_matrix_template(
+    num_pops, ghost_present, matrix_index=0, migration_varies_by_matrix=False
+):
     # this function filles out a completed migration matrix (i.e. migration between all pops)
-    matrix_label = "//Migration matrix 0"
+    matrix_label = f"//Migration matrix {matrix_index}"
     matrix = [matrix_label]
 
     for i in range(1, num_pops + 1):
@@ -411,13 +426,19 @@ def get_matrix_template(num_pops, ghost_present):
                 populations_list = get_population_list(num_pops, ghost_present)
                 from_pop = populations_list[i - 1]
                 to_pop = populations_list[j - 1]
-                matrix_i_j = f"MIG{from_pop}{to_pop}$"
+                # Add matrix index suffix if migration varies by matrix
+                if migration_varies_by_matrix:
+                    matrix_i_j = f"MIG{from_pop}{to_pop}_{matrix_index}$"
+                else:
+                    matrix_i_j = f"MIG{from_pop}{to_pop}$"
             row.append(matrix_i_j)
         matrix.append(" ".join(row))
     return matrix
 
 
-def get_migration_matrices(num_pops, ghost_present, divergence_events):
+def get_migration_matrices(
+    num_pops, ghost_present, divergence_events, migration_varies_by_matrix=False
+):
     # define in nested functions
     def extract_coalescing_population(event):
         # find the coalescing pop (the source)
@@ -435,24 +456,73 @@ def get_migration_matrices(num_pops, ghost_present, divergence_events):
     # start by defining empty list
     matrices = []
     # the first matrix is a complete migration matrix
-    first_matrix = get_matrix_template(num_pops, ghost_present)
+    first_matrix = get_matrix_template(
+        num_pops,
+        ghost_present,
+        matrix_index=0,
+        migration_varies_by_matrix=migration_varies_by_matrix,
+    )
     matrices.append(first_matrix)
 
     # start with the fully filled out migration matrix
-    current_matrix = get_matrix_template(num_pops, ghost_present)
+    current_matrix = get_matrix_template(
+        num_pops,
+        ghost_present,
+        matrix_index=0,
+        migration_varies_by_matrix=migration_varies_by_matrix,
+    )
+
+    # Track all populations that have coalesced (for varying migration option)
+    coalesced_populations = []
 
     # loop through all divergence events going back in time
     for i in range(len(divergence_events)):
         current_event = divergence_events[i]
         # find the migration matrix of the current event
-        current_event_matrix_index = re.search(r"\d+$", current_event).group()
+        current_event_matrix_index = int(re.search(r"\d+$", current_event).group())
+
+        # If migration varies by matrix, create a new template for this matrix
+        # Otherwise, use the current matrix and remove coalesced populations
+        if migration_varies_by_matrix:
+            current_matrix = get_matrix_template(
+                num_pops,
+                ghost_present,
+                matrix_index=current_event_matrix_index,
+                migration_varies_by_matrix=True,
+            )
+
+            # Zero out migration for all previously coalesced populations
+            matrix_without_label = current_matrix[1:]
+            for coalesced_pop in coalesced_populations:
+                pattern = r"MIG{}[0-9a-zA-Z]*_\d+\$|MIG[0-9a-zA-Z]*{}_\d+\$".format(
+                    coalesced_pop, coalesced_pop
+                )
+                matrix_without_label = [
+                    re.sub(pattern, "0.000", line) for line in matrix_without_label
+                ]
+            current_matrix = [current_matrix[0]] + matrix_without_label
+
         # get the coalescing population (the source)
         coalescing_population = extract_coalescing_population(current_event)
-        coalescing_population_in_matrix_pattern = (
-            r"MIG{}[0-9a-zA-Z$]*|MIG[0-9a-zA-Z]*{}\$".format(
-                coalescing_population, coalescing_population
+
+        # Track this population as coalesced for future matrices (varying migration only)
+        if migration_varies_by_matrix and coalescing_population:
+            coalesced_populations.append(coalescing_population)
+
+        # Pattern to match migration parameters with the coalescing population
+        # Need to handle both with and without matrix index suffix
+        if migration_varies_by_matrix:
+            coalescing_population_in_matrix_pattern = (
+                r"MIG{}[0-9a-zA-Z]*_\d+\$|MIG[0-9a-zA-Z]*{}_\d+\$".format(
+                    coalescing_population, coalescing_population
+                )
             )
-        )
+        else:
+            coalescing_population_in_matrix_pattern = (
+                r"MIG{}[0-9a-zA-Z$]*|MIG[0-9a-zA-Z]*{}\$".format(
+                    coalescing_population, coalescing_population
+                )
+            )
 
         # make a temp matrix without the label
         matrix_without_label = current_matrix[1:]
@@ -479,7 +549,7 @@ def generate_random_params(
 ):
     # determine if there is a ghost population
     add_ghost = random.choice([True, False])
-    
+
     # Determine total number of populations -- either given by user or + 1 if there is a ghost pop)
     number_of_populations = (
         user_given_number_of_populations + 1
@@ -496,8 +566,13 @@ def generate_random_params(
     initial_growth_rates = [0] * number_of_populations
 
     # determine if there should be migration (50% probability)
-    pops_should_migrate = random.choice([True, False]) 
-    
+    pops_should_migrate = random.choice([True, False])
+
+    # if there is migration, determine if migration rates vary by matrix (50% probability)
+    migration_varies_by_matrix = False
+    if pops_should_migrate:
+        migration_varies_by_matrix = random.choice([True, False])
+
     # generate historical events
     historical_events, divergence_events = get_historical_events(
         ghost_present=add_ghost,
@@ -505,12 +580,13 @@ def generate_random_params(
         pops_should_migrate=pops_should_migrate,
     )
 
-    # build migration matrices (if there is migration) 
+    # build migration matrices (if there is migration)
     if pops_should_migrate:
         migration_matrices = get_migration_matrices(
             num_pops=number_of_populations,
             ghost_present=add_ghost,
             divergence_events=divergence_events,
+            migration_varies_by_matrix=migration_varies_by_matrix,
         )
     else:
         migration_matrices = []

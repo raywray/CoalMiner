@@ -3,9 +3,9 @@ OUTPUT_DIR: hom_sap_models
 NUM_RANDOM_MODELS: 100
 NUM_POPS: 3
 SAMPLE_SIZES:
-  - 15
-  - 15
-  - 15
+  - 30
+  - 30
+  - 30
 # Optional: Specify paths to .obs files. If not provided, will look for files matching INPUT_PREFIX*.obs in the current directory
 OBS_FILES:
   - tutorial/example_input_files/hom_sap_DSFS.obs
