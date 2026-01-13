@@ -41,7 +41,7 @@ cp [prefix]_joint*.obs CoalMiner/
 This file must contain the following information
 - `INPUT_PREFIX`: the output prefix the user would like to use 
 - `NUM_POPS`: the number of populations being tested 
-- `SAMPLE_SIZES`: as a bulleted list, the number of sampled individuals from each population 
+- `SAMPLE_SIZES`: as a bulleted list, the number of sampled individuals from each population (haploid)
 
 Additionally, prior distributions, ranges and types must be provided for (under the `MODEL_PARAMS` section): 
 - mutation rates: `mutation_rate_dist`
