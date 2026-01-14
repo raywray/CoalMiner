@@ -1,0 +1,35 @@
+// Priors and rules file
+// *********************
+
+[PARAMETERS]
+//#isInt? #name #dist. #min #max
+//all Ns are in number of haploid individuals
+0 MUTRATE$ unif 1.29e-08 1.29e-08 output
+1 N_POP0$ unif 10000 10000 output
+1 N_POP1$ unif 10000 10000 output
+1 N_POP2$ unif 10000 10000 output
+1 N_POPG$ unif 10000 10000 output
+1 T_BOTGG$ unif 10.0e0 10.0e5 output
+1 T_1_2$ unif 1 1000 hide
+1 T_2_3$ unif 1 1000 hide
+1 T_3_4$ unif 1 1000 hide
+1 T_4_5$ unif 1 1000 hide
+1 T_5_6$ unif 1 1000 hide
+1 N_ANCALL$ unif 10000 10000 hide
+1 N_ANCG0$ unif 10000 10000 hide
+1 N_BOTGG$ unif 10000 10000 hide
+1 N_CURGG$ unif 10000 10000 hide
+1 N_ANCGG$ unif 10000 10000 hide
+
+[RULES]
+
+[COMPLEX PARAMETERS]
+
+0 RELANCG0$ = N_ANCALL$/N_ANCG0$ output
+0 RESBOTGG$ = N_BOTGG$/N_CURGG$ output
+0 RESBOTENDGG$ = N_ANCGG$/N_BOTGG$ output
+1 T_BOTENDGG$ = T_1_2$ + T_BOTGG$ output
+1 T_ADMIX1G$ = T_2_3$ + T_BOTENDGG$ output
+1 T_DIVG0$ = T_3_4$ + T_ADMIX1G$ output
+1 T_DIV01$ = T_4_5$ + T_DIVG0$ output
+1 T_DIV12$ = T_5_6$ + T_DIV01$ output

@@ -249,37 +249,47 @@ def get_bottleneck_events(num_pops, ghost_present):
 def order_historical_events(historical_events):
     # define nested functions
     def extract_source_sink(event):
-        match = re.search(r"T*([0-9G]{2})", event)
-        source, sink = match.group(1)
-        return source, sink
+        m = re.search(r"T_(?:DIV|ADMIX|BOT)(G|\d+)(G|\d+)\$", event)
+        if not m:
+            return None, None
+        return m.group(1), m.group(2)
+
+    def is_migration_switch_event(event):
+        """Check if event is a migration-switching event (has no source/sink)"""
+        return any(
+            event.startswith(prefix)
+            for prefix in ["T_MIGSTOP", "T_CONTACT", "T_PULSE_START", "T_PULSE_END"]
+        )
 
     def place_events(current_ordered_events, events_to_add):
         # make a copy
         newly_ordered_events = current_ordered_events.copy()
+
         # iterate through new events
         for cur_event in events_to_add:
             # extract the current source and sink
             cur_source, cur_sink = extract_source_sink(cur_event)
 
-            # initilalize list of possible places to insert admix event
-            possible_insertion_indeces = []
+            # Skip events where source/sink cannot be extracted
+            if cur_source is None or cur_sink is None:
+                continue
 
-            # loop through current ordered events
-            for event in current_ordered_events:
-                event_source, event_sink = extract_source_sink(event)
+            # Start with all possible insertion points, including "append at end"
+            possible_insertion_indices = list(range(len(newly_ordered_events) + 1))
 
-                # add the index of the event to possible indeces
-                possible_insertion_indeces.append(current_ordered_events.index(event))
+            # loop through current ordered events (use the updated list)
+            for i, event in enumerate(newly_ordered_events):
+                event_source, _ = extract_source_sink(event)
 
-                # check to see if either cur event sink or source is dead
+                # stop once the current event's source/sink would be "dead"
+                # forbid inserting AFTER this point
                 if cur_source == event_source or cur_sink == event_source:
+                    possible_insertion_indices = possible_insertion_indices[: i + 1]
                     break
 
-            insertion_index = random.choice(possible_insertion_indeces)
+            # If no valid positions, insert at beginning (should be rare)
+            insertion_index = random.choice(possible_insertion_indices) if possible_insertion_indices else 0
             newly_ordered_events.insert(insertion_index, cur_event)
-            newly_ordered_events = set_migration_matrix(
-                newly_ordered_events, insertion_index
-            )
 
         return newly_ordered_events
 
@@ -312,6 +322,7 @@ def order_historical_events(historical_events):
     # divide events into event types
     admix_events = []
     bot_events = []
+    mig_switch_events = []
 
     for event in historical_events:
         if "T_DIV" in event:
@@ -321,6 +332,9 @@ def order_historical_events(historical_events):
             admix_events.append(event)
         elif "T_BOT" in event:
             bot_events.append(event)
+        elif is_migration_switch_event(event):
+            # migration switching events (no source/sink)
+            mig_switch_events.append(event)
         # TODO: add other events here
 
     # put events in random -- but chronologically correct -- order
@@ -331,6 +345,16 @@ def order_historical_events(historical_events):
         ordered_historical_events = place_events(ordered_historical_events, bot_events)
         # here, make sure that the bottleneck endings are accurate
         ordered_historical_events = add_end_events(ordered_historical_events, "BOT")
+
+    # insert migration switching events at random valid positions
+    # (they don't have source/sink constraints)
+    for mig_event in mig_switch_events:
+        if ordered_historical_events:
+            # Insert at a random position among existing events
+            insertion_index = random.randint(0, len(ordered_historical_events))
+            ordered_historical_events.insert(insertion_index, mig_event)
+        else:
+            ordered_historical_events.append(mig_event)
 
     return ordered_historical_events
 
@@ -377,39 +401,6 @@ def get_historical_events(ghost_present, number_of_populations, pops_should_migr
     return historical_events, divergence_events
 
 
-def set_migration_matrix(events, event_index):
-    current_event = events[event_index]
-    possible_mig_mat_indeces = []
-
-    previous_event = events[event_index - 1] if event_index != 0 else None
-    next_event = events[event_index + 1] if event_index != len(events) - 1 else None
-
-    migration_matrix_extraction_pattern = r"(\d+)$"
-    prev_match = (
-        re.search(migration_matrix_extraction_pattern, previous_event)
-        if previous_event
-        else None
-    )
-    next_match = (
-        re.search(migration_matrix_extraction_pattern, next_event)
-        if next_event
-        else None
-    )
-
-    possible_mig_mat_indeces = [prev_match.group(1)] if prev_match else ["0"]
-    if next_match:
-        possible_mig_mat_indeces.append(next_match.group(1))
-
-    new_migration_matrix = random.choice(possible_mig_mat_indeces)
-    updated_current_event = re.sub(
-        migration_matrix_extraction_pattern, new_migration_matrix, current_event
-    )
-
-    events[event_index] = updated_current_event
-
-    return events
-
-
 def get_matrix_template(
     num_pops, ghost_present, matrix_index=0, migration_varies_by_matrix=False
 ):
@@ -441,17 +432,13 @@ def get_migration_matrices(
 ):
     # define in nested functions
     def extract_coalescing_population(event):
-        # find the coalescing pop (the source)
-        match = re.search(r"^T_DIV([0-9a-zA-Z])+[0-9a-zA-Z]", event)
-        if match:
-            coalescing_population = match.group(1)
-            # if ghost, replace number with "G"
-            if ghost_present:
-                if coalescing_population == str(num_pops - 1):
-                    return "G"
-            return coalescing_population
-        else:
+        m = re.search(r"^T_DIV(G|\d+)(G|\d+)\$", event.split()[0])
+        if not m:
             return None
+        src = m.group(1)
+        if ghost_present and src == str(num_pops - 1):
+            return "G"
+        return src
 
     # start by defining empty list
     matrices = []
@@ -544,6 +531,186 @@ def get_migration_matrices(
     return matrices
 
 
+def choose_migration_family():
+    """
+    Choose one migration family from the available options using weighted random selection.
+
+    Returns:
+        str: One of "IM_THEN_ISO", "SECONDARY_CONTACT", "CONSTANT_MIG", "PULSE"
+    """
+    families = ["IM_THEN_ISO", "SECONDARY_CONTACT", "CONSTANT_MIG", "PULSE"]
+    weights = [0.4, 0.3, 0.2, 0.1]
+
+    # Use random.choices for weighted selection (Python 3.6+)
+    return random.choices(families, weights=weights, k=1)[0]
+
+
+def apply_migration_family_to_event_indices(ordered_events, family):
+    """
+    Rewrite migration matrix indices (last field) in ordered events to be consistent
+    with the chosen migration family. This prevents events from incorrectly "turning
+    migration back on" after a switch event due to random ordering.
+
+    ordered_events: List of event strings ordered most recent -> oldest
+    family: Migration family name
+
+    Returns:
+        List of rewritten event strings
+    """
+
+    def set_last_field(event, idx):
+        """Helper to set the last field (migration matrix index) of an event"""
+        parts = event.split()
+        if len(parts) >= 7:
+            parts[-1] = str(idx)
+        return " ".join(parts)
+
+    # For PULSE family, ensure T_PULSE_START comes before T_PULSE_END
+    events = ordered_events.copy()
+    if family == "PULSE":
+        start_idx = None
+        end_idx = None
+        for i, event in enumerate(events):
+            if event.startswith("T_PULSE_START"):
+                start_idx = i
+            elif event.startswith("T_PULSE_END"):
+                end_idx = i
+
+        # If END appears before START (more recent), swap them
+        if start_idx is not None and end_idx is not None and end_idx < start_idx:
+            events[start_idx], events[end_idx] = events[end_idx], events[start_idx]
+
+    # Initialize current migration matrix index
+    # PULSE starts at 0 (no migration), others start at 0 (migration if applicable)
+    current_idx = 0
+
+    rewritten_events = []
+
+    for event in events:
+        # Handle migration-switching events that change the current epoch
+        if event.startswith("T_MIGSTOP") or event.startswith("T_CONTACT"):
+            # Switch from migration (0) to no migration (1) going backward in time
+            current_idx = 1
+            rewritten_events.append(set_last_field(event, 1))
+
+        elif event.startswith("T_PULSE_START"):
+            # Enter pulse window (start migration) going backward
+            current_idx = 1
+            rewritten_events.append(set_last_field(event, 1))
+
+        elif event.startswith("T_PULSE_END"):
+            # Exit pulse window (end migration) going backward
+            current_idx = 2
+            rewritten_events.append(set_last_field(event, 2))
+
+        else:
+            # Regular event (DIV, ADMIX, BOT, etc.) - use current epoch's index
+            # This prevents the event from overriding the migration regime
+            rewritten_events.append(set_last_field(event, current_idx))
+
+    return rewritten_events
+
+
+def get_migration_matrices_optionA(
+    num_pops, ghost_present, divergence_events, family, migration_varies_by_matrix=False
+):
+    """
+    Build migration matrices based on the chosen migration family.
+
+    Args:
+        num_pops: Number of populations
+        ghost_present: Whether ghost population exists
+        divergence_events: List of divergence event strings
+        family: Migration family ("IM_THEN_ISO", "SECONDARY_CONTACT", "CONSTANT_MIG", "PULSE")
+        migration_varies_by_matrix: Whether migration parameters vary by matrix
+
+    Returns:
+        List of migration matrices
+    """
+    matrices = []
+
+    if family == "CONSTANT_MIG":
+        # Only matrix 0 with full migration
+        matrix = get_matrix_template(
+            num_pops,
+            ghost_present,
+            matrix_index=0,
+            migration_varies_by_matrix=migration_varies_by_matrix,
+        )
+        matrices.append(matrix)
+
+    elif family == "IM_THEN_ISO":
+        # Matrix 0: full migration (recent)
+        # Matrix 1: no migration (old)
+        matrix_0 = get_matrix_template(
+            num_pops,
+            ghost_present,
+            matrix_index=0,
+            migration_varies_by_matrix=migration_varies_by_matrix,
+        )
+        matrices.append(matrix_0)
+
+        # Matrix 1: all zeros
+        matrix_1_label = "//Migration matrix 1"
+        matrix_1 = [matrix_1_label]
+        for i in range(1, num_pops + 1):
+            row = ["0.000"] * num_pops
+            matrix_1.append(" ".join(row))
+        matrices.append(matrix_1)
+
+    elif family == "SECONDARY_CONTACT":
+        # Matrix 0: full migration (recent)
+        # Matrix 1: no migration (old)
+        # Same structure as IM_THEN_ISO, different conceptual interpretation
+        matrix_0 = get_matrix_template(
+            num_pops,
+            ghost_present,
+            matrix_index=0,
+            migration_varies_by_matrix=migration_varies_by_matrix,
+        )
+        matrices.append(matrix_0)
+
+        # Matrix 1: all zeros
+        matrix_1_label = "//Migration matrix 1"
+        matrix_1 = [matrix_1_label]
+        for i in range(1, num_pops + 1):
+            row = ["0.000"] * num_pops
+            matrix_1.append(" ".join(row))
+        matrices.append(matrix_1)
+
+    elif family == "PULSE":
+        # Matrix 0: no migration (most recent)
+        # Matrix 1: full migration (pulse window)
+        # Matrix 2: no migration (old)
+
+        # Matrix 0: all zeros
+        matrix_0_label = "//Migration matrix 0"
+        matrix_0 = [matrix_0_label]
+        for i in range(1, num_pops + 1):
+            row = ["0.000"] * num_pops
+            matrix_0.append(" ".join(row))
+        matrices.append(matrix_0)
+
+        # Matrix 1: full migration
+        matrix_1 = get_matrix_template(
+            num_pops,
+            ghost_present,
+            matrix_index=1,
+            migration_varies_by_matrix=migration_varies_by_matrix,
+        )
+        matrices.append(matrix_1)
+
+        # Matrix 2: all zeros
+        matrix_2_label = "//Migration matrix 2"
+        matrix_2 = [matrix_2_label]
+        for i in range(1, num_pops + 1):
+            row = ["0.000"] * num_pops
+            matrix_2.append(" ".join(row))
+        matrices.append(matrix_2)
+
+    return matrices
+
+
 def generate_random_params(
     tpl_filename, user_given_number_of_populations, user_given_sample_sizes
 ):
@@ -582,10 +749,46 @@ def generate_random_params(
 
     # build migration matrices (if there is migration)
     if pops_should_migrate:
-        migration_matrices = get_migration_matrices(
+        # Choose migration family
+        migration_family = choose_migration_family()
+
+        # Add migration-switching events based on family
+        if migration_family == "IM_THEN_ISO":
+            mig_stop_event = "T_MIGSTOP$ -1 -1 0 1 0 1"
+            historical_events.append(mig_stop_event)
+
+        elif migration_family == "SECONDARY_CONTACT":
+            contact_event = "T_CONTACT$ -1 -1 0 1 0 1"
+            historical_events.append(contact_event)
+
+        elif migration_family == "PULSE":
+            pulse_start_event = "T_PULSE_START$ -1 -1 0 1 0 1"
+            pulse_end_event = "T_PULSE_END$ -1 -1 0 1 0 2"
+            historical_events.append(pulse_start_event)
+            historical_events.append(pulse_end_event)
+
+        # CONSTANT_MIG: no switch events needed
+
+        # Order all historical events (including migration switches)
+        historical_events = order_historical_events(historical_events)
+
+        # Rewrite migration matrix indices to be consistent with the chosen family
+        # This must happen AFTER ordering to prevent events from overriding
+        # the migration regime when randomly placed
+        historical_events = apply_migration_family_to_event_indices(
+            historical_events, migration_family
+        )
+
+        # Recompute divergence_events from the rewritten historical events
+        # for use in matrix generation
+        divergence_events = [e for e in historical_events if e.startswith("T_DIV")]
+
+        # Build migration matrices using the new approach
+        migration_matrices = get_migration_matrices_optionA(
             num_pops=number_of_populations,
             ghost_present=add_ghost,
             divergence_events=divergence_events,
+            family=migration_family,
             migration_varies_by_matrix=migration_varies_by_matrix,
         )
     else:
@@ -606,3 +809,123 @@ def generate_random_params(
         migration_matrices=migration_matrices,
         historical_events=historical_events,
     )
+
+
+def test_migration_families():
+    """
+    Internal test function to validate migration family implementation.
+    Generates 20 models and checks for consistency.
+    """
+    print("Testing migration family implementation...")
+    print("=" * 60)
+
+    import tempfile
+    import os
+
+    for i in range(20):
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tpl", delete=False) as f:
+            temp_filename = f.name
+
+        try:
+            # Generate random model
+            generate_random_params(
+                tpl_filename=temp_filename,
+                user_given_number_of_populations=random.randint(2, 4),
+                user_given_sample_sizes=[20] * random.randint(2, 4),
+            )
+
+            # Read and validate the file
+            with open(temp_filename, "r") as f:
+                content = f.read()
+
+            # Extract migration matrix count
+            lines = content.split("\n")
+            for idx, line in enumerate(lines):
+                if line.startswith("//Number of migration matrices"):
+                    num_matrices = int(lines[idx + 1])
+                    break
+            else:
+                num_matrices = 0
+
+            # Extract max referenced matrix index from historical events
+            max_matrix_idx = -1
+            in_events_section = False
+            event_indices = []  # Track indices in order for validation
+            for line in lines:
+                if "historical event:" in line:
+                    in_events_section = True
+                    continue
+                if in_events_section and line.strip() and not line.startswith("//"):
+                    parts = line.split()
+                    if len(parts) >= 7:
+                        try:
+                            matrix_idx = int(parts[-1])
+                            max_matrix_idx = max(max_matrix_idx, matrix_idx)
+                            event_indices.append(matrix_idx)
+                        except (ValueError, IndexError):
+                            pass
+                if line.startswith("//Number of independent loci"):
+                    break
+
+            # Determine family based on content
+            family = "UNKNOWN"
+            if "T_MIGSTOP" in content:
+                family = "IM_THEN_ISO"
+            elif "T_CONTACT" in content:
+                family = "SECONDARY_CONTACT"
+            elif "T_PULSE_START" in content:
+                family = "PULSE"
+            elif num_matrices == 1:
+                family = "CONSTANT_MIG"
+            elif num_matrices == 0:
+                family = "NO_MIGRATION"
+
+            # Validate matrix count
+            if num_matrices > 0:
+                assert (
+                    max_matrix_idx < num_matrices
+                ), f"Model {i}: Max matrix index {max_matrix_idx} >= num matrices {num_matrices}"
+
+            # Family-specific validation of event indices
+            if family == "IM_THEN_ISO" or family == "SECONDARY_CONTACT":
+                # After first occurrence of 1, no later event should have 0
+                if 1 in event_indices:
+                    first_one_idx = event_indices.index(1)
+                    for idx in event_indices[first_one_idx + 1 :]:
+                        assert (
+                            idx != 0
+                        ), f"Model {i} ({family}): Found index 0 after index 1: {event_indices}"
+
+            elif family == "PULSE":
+                # Indices should be non-decreasing and subset of {0,1,2}
+                for idx in event_indices:
+                    assert idx in [
+                        0,
+                        1,
+                        2,
+                    ], f"Model {i} (PULSE): Invalid index {idx}, expected 0, 1, or 2"
+                # Check non-decreasing (allowing repeats)
+                for j in range(len(event_indices) - 1):
+                    assert (
+                        event_indices[j] <= event_indices[j + 1]
+                    ), f"Model {i} (PULSE): Indices not non-decreasing: {event_indices}"
+
+            elif family == "CONSTANT_MIG":
+                # All indices should be 0
+                for idx in event_indices:
+                    assert (
+                        idx == 0
+                    ), f"Model {i} (CONSTANT_MIG): Expected all indices to be 0, found {idx}"
+
+            print(
+                f"Model {i+1:2d}: {family:20s} | matrices: {num_matrices} | max_idx: {max_matrix_idx} | indices: {event_indices if event_indices else 'none'}"
+            )
+
+        finally:
+            # Clean up
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
+
+    print("=" * 60)
+    print("All tests passed!")
